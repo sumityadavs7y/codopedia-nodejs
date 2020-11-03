@@ -1,0 +1,96 @@
+{
+	"info": {
+		"_postman_id": "64d25400-ab97-4b10-91f6-3d3d441f1785",
+		"name": "Codopedia-nodejs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "/register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"sumit yadav\",\r\n    \"email\":\"sumityadavmaster@gmail.com\",\r\n    \"password\":\"sumit123\"\r\n}"
+						},
+						"url": {
+							"raw": "{{url}}/auth/register",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "register user"
+					},
+					"response": []
+				},
+				{
+					"name": "/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "239846ec-ea97-45f7-b5c0-84f2e02a5ecd",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.test(\"access_token not empty\", function () {\r",
+									"    pm.expect(jsonData.accessToken).not.eql(undefined);\r",
+									"});\r",
+									"\r",
+									"// set access token as environement variable\r",
+									"if (jsonData.accessToken !== undefined) {\r",
+									"    postman.setEnvironmentVariable(\"accessToken\", jsonData.accessToken);\r",
+									"} else {\r",
+									"    postman.setEnvironmentVariable(\"accessToken\", null);\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"sumityadavmaster@gmail.com\",\r\n    \"password\":\"sumit123\"\r\n}"
+						},
+						"url": {
+							"raw": "{{url}}/auth/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "register user"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
