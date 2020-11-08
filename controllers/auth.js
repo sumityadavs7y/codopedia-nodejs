@@ -1,8 +1,12 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 
 const User = require('../models/user');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
@@ -31,7 +35,7 @@ exports.signup = (req, res, next) => {
             }
             next(err);
         });
-}
+};
 
 exports.login = (req, res, next) => {
     const email = req.body.email;
@@ -59,7 +63,7 @@ exports.login = (req, res, next) => {
             },
                 process.env.SECRET_KEY,
                 { expiresIn: '1h' });
-            res.status(200).json({ accessToken: accessToken, userId: loadedUser._id.toString() });
+            res.status(200).json({ accessToken: accessToken, expiresIn: 60 });
         })
         .catch(err => {
             if (!err.statusCode) {
@@ -67,4 +71,46 @@ exports.login = (req, res, next) => {
             }
             next(err);
         });
-}
+};
+
+exports.loginWithGoogle = (req, res, next) => {
+    const { tokenId } = req.body;
+    // console.log(tokenId);
+    client.verifyIdToken({ idToken: tokenId, audience: process.env.GOOGLE_CLIENT_ID })
+        .then(response => {
+            const { email_verified, name, email } = response.getPayload();
+            if (!email_verified) {
+                const error = new Error('Email not verified');
+                error.statusCode = 401;
+                throw error;
+            }
+            User.findOne({ email: email }).then(userDoc => {
+                if (!userDoc) {
+                    let password = crypto.randomBytes(20).toString('hex');
+                    const user = new User({
+                        email: email,
+                        password: password,
+                        name: name
+                    });
+                    return user.save();
+                } else {
+                    return Promise.resolve(userDoc);
+                }
+            })
+                .then((user) => {
+                    const accessToken = jwt.sign({
+                        email: user.email,
+                        userId: user._id.toString()
+                    },
+                        process.env.SECRET_KEY,
+                        { expiresIn: '1h' });
+                    res.status(200).json({ accessToken: accessToken, expiresIn: 60 });
+                })
+                .catch(err => {
+                    if (!err.statusCode) {
+                        err.statusCode = 500;
+                    }
+                    next(err);
+                });
+        });
+};

@@ -21,4 +21,6 @@ router.post('/register', [
 
 router.post('/login', authController.login);
 
+router.post('/googlelogin', authController.loginWithGoogle);
+
 module.exports = router;
